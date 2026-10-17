@@ -1,0 +1,38 @@
+# 大文件（通过网盘共享）
+UserBehavior.db
+UserBehavior.csv
+UserBehavior.csv.zip
+*.db
+*.csv
+*.zip
+
+# Java
+*.class
+*.jar
+target/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
