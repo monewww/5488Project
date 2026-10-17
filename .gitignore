@@ -1,7 +1,4 @@
 # 大文件（通过网盘共享）
-UserBehavior.db
-UserBehavior.csv
-UserBehavior.csv.zip
 *.db
 *.csv
 *.zip
@@ -18,9 +15,6 @@ Project_report_template.doc
 *.class
 target/
 *.log
-
-# 例外：保留 SQLite JDBC 驱动（仅几MB，方便组员直接使用）
-!sqlite-jdbc-3.44.1.0.jar
 
 # Python
 __pycache__/
