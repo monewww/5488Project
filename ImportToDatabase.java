@@ -14,10 +14,31 @@ import java.nio.file.Paths;
  */
 public class ImportToDatabase {
     
-    // === 配置 ===
-    private static final String CSV_PATH = "UserBehavior.csv";
-    private static final String DB_PATH = "UserBehavior.db";
+    // === 配置（基于脚本所在目录，无需修改路径即可运行）===
+    private static final String BASE_DIR;
+    private static final String CSV_PATH;
+    private static final String DB_PATH;
     private static final int CHUNK_SIZE = 500_000;  // 每次处理50万行
+    
+    static {
+        // 获取脚本所在目录，确保从任意位置运行都能正确找到文件
+        try {
+            String classPath = ImportToDatabase.class.getProtectionDomain()
+                    .getCodeSource().getLocation().toURI().getPath();
+            java.io.File classDir = new java.io.File(classPath).getParentFile();
+            // 如果在 target/classes 下（Maven），则回退到项目根目录
+            if (classDir != null && classDir.getName().equals("classes") 
+                    && classDir.getParentFile() != null 
+                    && classDir.getParentFile().getName().equals("target")) {
+                classDir = classDir.getParentFile().getParentFile();
+            }
+            BASE_DIR = classDir != null ? classDir.getAbsolutePath() : ".";
+        } catch (Exception e) {
+            BASE_DIR = ".";
+        }
+        CSV_PATH = BASE_DIR + java.io.File.separator + "UserBehavior.csv";
+        DB_PATH = BASE_DIR + java.io.File.separator + "UserBehavior.db";
+    }
     
     public static void main(String[] args) {
         try {

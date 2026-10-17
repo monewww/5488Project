@@ -8,71 +8,119 @@
 
 ---
 
-## 快速开始
+## 数据库重现指南（组员必读）
 
-### 1. 获取数据集
+> 由于数据库文件过大（7.49GB），无法直接上传 Git。请按照以下步骤自行生成本地数据库。
+> 所有脚本已配置为**相对路径**，无需修改代码，只要文件结构正确即可运行。
 
-1. 访问天池：https://tianchi.aliyun.com/dataset/649
-2. 下载 `UserBehavior.csv.zip`（约900MB）
-3. 解压到项目根目录，得到 `UserBehavior.csv`（约3.42GB）
+### 前置条件
 
-### 2. 生成数据库
+| 需要 | 说明 |
+|------|------|
+| `UserBehavior.csv` | 原始数据文件（约3.42GB），从下方获取 |
+| 脚本文件 | `ImportToDatabase.java` 或 `import_to_database.py`（已在仓库中） |
 
-#### 方式A：使用Java脚本（推荐）
+### 第一步：获取原始数据文件
 
-**前提条件**:
-- Java 17+
-- Maven 3.6+
+**方式一：自行下载（推荐）**
 
-**步骤**:
-```bash
-# 编译项目
-mvn compile
+1. 访问天池数据集页面：https://tianchi.aliyun.com/dataset/649
+2. 登录/注册阿里云账号
+3. 下载 `UserBehavior.csv.zip`（约900MB）
+4. 解压后将 `UserBehavior.csv`（约3.42GB）放到**项目根目录**（与脚本同级）
 
-# 运行数据库导入脚本（耗时约17分钟）
-mvn exec:java
+
+### 第二步：确认文件结构
+
+确保你的目录结构如下：
+
+```
+Database/
+├── ImportToDatabase.java      ← Java导入脚本（二选一）
+├── import_to_database.py      ← Python导入脚本（二选一）
+├── visualizations.py          ← 可视化脚本
+├── sqlite-jdbc-3.44.1.0.jar   ← Java方式需要此驱动
+├── UserBehavior.csv           ← ★ 原始数据文件（需自行获取）
+└── visualizations/            ← 图表输出目录
 ```
 
-或者直接编译运行：
+### 第三步：运行导入脚本
+
+#### 方式A：Python脚本（简单，推荐新手）
+
 ```bash
-# 下载SQLite JDBC驱动
-# https://github.com/xerial/sqlite-jdbc/releases
-
-# 编译
-javac -cp "sqlite-jdbc-3.44.1.0.jar" ImportToDatabase.java
-
-# 运行
-java -cp ".;sqlite-jdbc-3.44.1.0.jar" ImportToDatabase
-```
-
-#### 方式B：使用Python脚本
-
-**前提条件**:
-- Python 3.8+
-- pandas库
-
-**步骤**:
-```bash
+# 1. 安装依赖
 pip install pandas
+
+# 2. 运行导入脚本（耗时约20-30分钟）
 python import_to_database.py
 ```
 
-#### 方式C：直接下载数据库
+**预期输出**：
+```
+开始导入数据 (每块 500,000 行)...
+  块 1: 导入 500,000 行 | 累计 500,000 行 | ...
+  块 2: 导入 500,000 行 | 累计 1,000,000 行 | ...
+  ...
+创建索引...
+导入完成！总行数: 100,150,807
+数据库文件大小: 7.49 GB
+```
 
-由于数据库文件过大（7.49GB），可以从网盘下载：
-- **百度网盘**: [链接]
-- **提取码**: xxxx
+#### 方式B：Java脚本（性能更好）
 
-下载后将 `UserBehavior.db` 放到项目根目录即可。
+**前提**: Java 17+ 和 Maven 3.6+
 
-### 3. 生成可视化图表（Python）
+```bash
+# 使用Maven运行（耗时约17分钟）
+mvn compile
+mvn exec:java
+```
+
+或直接编译运行：
+```bash
+# 编译
+javac -cp "sqlite-jdbc-3.44.1.0.jar" ImportToDatabase.java
+
+# 运行（Windows用分号，Mac/Linux用冒号）
+java -cp ".;sqlite-jdbc-3.44.1.0.jar" ImportToDatabase
+```
+
+### 第四步：验证数据库
+
+导入完成后，可用以下命令快速验证（使用 `sqlite3` 或 Python）：
+
+```python
+import sqlite3
+conn = sqlite3.connect("UserBehavior.db")
+# 查看总行数
+print(conn.execute("SELECT COUNT(*) FROM user_behavior").fetchone())
+# 查看各行为类型统计
+for row in conn.execute("SELECT behavior_type, COUNT(*) FROM user_behavior GROUP BY behavior_type"):
+    print(row)
+conn.close()
+```
+
+**预期结果**：总行数应为 **100,150,807**
+
+### 第五步（可选）：生成可视化图表
 
 ```bash
 pip install pandas matplotlib seaborn numpy
 python visualizations.py
 ```
 
-生成的图表保存在 `visualizations/` 目录。
+图表将保存在 `visualizations/` 目录。
+
+### 常见问题排查
+
+| 问题 | 解决方法 |
+|------|----------|
+| `FileNotFoundError: UserBehavior.csv` | 确认 CSV 文件在项目根目录，且文件名完全一致（区分大小写） |
+| `ModuleNotFoundError: pandas` | 运行 `pip install pandas` |
+| Java 报 `ClassNotFoundException` | 确认 `sqlite-jdbc-3.44.1.0.jar` 在同一目录，且 classpath 分隔符正确（Windows `;` / Mac `:` ） |
+| 导入很慢 | 正常，约1亿行数据需要20-30分钟 |
+| 磁盘空间不足 | 需要约 **12GB** 可用空间（CSV 3.42GB + DB 7.49GB） |
 
 ---
 
@@ -168,6 +216,7 @@ public class Example {
 | `05_conversion_funnel.png` | 用户转化漏斗（水平漏斗图） |
 | `06_user_activity.png` | 用户活跃度分布（直方图+分箱统计） |
 | `07_top_items.png` | 热门商品Top20（分组柱状图） |
+| `08_dashboard.png` | 综合数据概览仪表板 |
 
 ---
 
@@ -213,13 +262,16 @@ STRFTIME('%Y-%m-%d', datetime(timestamp, 'unixepoch', '+8 hours'))
 ## 项目结构
 
 ```
-group project/
+Database/
 ├── ImportToDatabase.java      # Java数据库导入脚本
-── import_to_database.py      # Python数据库导入脚本（参考）
+├── import_to_database.py      # Python数据库导入脚本
 ├── visualizations.py          # Python可视化脚本
 ├── pom.xml                    # Maven配置文件
+├── sqlite-jdbc-3.44.1.0.jar   # SQLite JDBC驱动
+├── slf4j-api-2.0.9.jar        # SQLite驱动依赖
+├── slf4j-simple-2.0.9.jar     # SQLite驱动依赖
 ├── UserBehavior.csv           # 原始数据（需下载，不上传Git）
-├── UserBehavior.db            # 数据库文件（需下载或生成，不上传Git）
+├── UserBehavior.db            # 数据库文件（需生成，不上传Git）
 ├── visualizations/            # 可视化图表
 │   ├── 01_behavior_distribution.png
 │   ├── 02_daily_trend.png
@@ -227,7 +279,8 @@ group project/
 │   ├── 04_top_categories.png
 │   ├── 05_conversion_funnel.png
 │   ├── 06_user_activity.png
-│   └── 07_top_items.png
+│   ├── 07_top_items.png
+│   └── 08_dashboard.png
 ├── README.md                  # 本文件
 └── .gitignore                 # Git忽略规则
 ```
@@ -236,22 +289,9 @@ group project/
 
 ## 小组成员
 
-- [你的名字] - 数据库 + 可视化
-- [组员1] - Java开发
-- [组员2] - ...
+- [汪成儒] - 数据库 + 可视化
+
 
 ---
 
-## 常见问题
 
-### Q: Java组员如何运行脚本？
-A: 确保安装了Java 17+和Maven，然后运行 `mvn compile` 和 `mvn exec:java`
-
-### Q: 数据库文件太大无法上传Git怎么办？
-A: 使用网盘共享（百度网盘/Google Drive），在README中提供下载链接
-
-### Q: 查询结果不对怎么办？
-A: 检查是否添加了时间戳过滤条件 `WHERE timestamp >= 1511539200 AND timestamp < 1512316800`
-
-### Q: 可视化图表看不清怎么办？
-A: 图片分辨率是150 DPI，可以放大查看或重新生成更高分辨率的版本

@@ -11,9 +11,10 @@ import numpy as np
 from datetime import datetime
 import os
 
-# === 配置 ===
-DB_PATH = r"f:\课程\5488big data\group project\UserBehavior.db"
-OUTPUT_DIR = r"f:\课程\5488big data\group project\visualizations"
+# === 配置（基于脚本所在目录，无需修改路径即可运行）===
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "UserBehavior.db")
+OUTPUT_DIR = os.path.join(BASE_DIR, "visualizations")
 
 # 时间戳过滤：只保留2017-11-25到2017-12-03的数据
 TIMESTAMP_MIN = 1511539200  # 2017-11-25 00:00:00 UTC+8

@@ -9,9 +9,10 @@ import pandas as pd
 import time
 import os
 
-# === 配置 ===
-CSV_PATH = r"f:\课程\5488big data\group project\UserBehavior.csv"
-DB_PATH = r"f:\课程\5488big data\group project\UserBehavior.db"
+# === 配置（基于脚本所在目录，无需修改路径即可运行）===
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(BASE_DIR, "UserBehavior.csv")
+DB_PATH = os.path.join(BASE_DIR, "UserBehavior.db")
 CHUNK_SIZE = 500_000  # 每次读取50万行
 
 # === 列名定义（CSV无表头）===
