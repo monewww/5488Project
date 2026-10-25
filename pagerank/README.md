@@ -249,8 +249,12 @@ Top-10：
 input: UserBehavior.csv.zip (全量)
 rows 100,150,807 -> sampled 312,780 | users 3,005 | sessions 51,348 (截断 161)
 nodes 168,000 | edges 1,763,568
-建图 0.7s, PageRank 55.0s (80 轮), final L1 1.979e-09
+PageRank 80 轮, final L1 1.9786532744951144e-09
 ```
+
+> 这组数字被**独立复现过两次**（不同机器、不同输入形式）：
+> 一次读 `.zip`（`results/stats.txt`，建图 0.7s / PR 55.0s），一次读 `.csv`（建图 3.1s / PR 309.6s），
+> `final_l1_delta` 到小数点后 16 位完全一致。说明结果是**确定性**的，换机器不影响。
 
 Top-5：
 
@@ -307,8 +311,8 @@ python local/compare_behaviors.py --indir results                 # 行为对比
 | 项 | 状态 |
 |---|---|
 | 小批量版在 `data/sample` 上端到端跑通 | ✅ 已验证（§5.1 的数字就是实跑输出） |
-| 小批量版在全量 CSV + 330 采样上端到端跑通 | ✅ 已验证（§5.2，`results/` 就是它的输出） |
-| MapReduce 版 `mvn package` 编译通过 | ✅ 已验证（`target/taobao-pagerank-1.0.jar`） |
+| 小批量版在全量 CSV + 330 采样上端到端跑通 | ✅ 已验证两次，结果逐位一致（§5.2） |
+| MapReduce 版 `mvn package` 编译通过 | ✅ 已验证（`dist/taobao-pagerank-1.0.jar` 就是产物） |
 | MapReduce 版在真实 Hadoop/YARN 上端到端跑通 | ⚠️ **未验证**——开发机是 Windows，缺 `winutils.exe` 起不了本地 MR；需要组员在集群上确认 |
 | Pig 版 | ⚠️ 未验证（逻辑与 Java 版等价，仅作备选） |
 
