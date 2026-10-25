@@ -14,7 +14,7 @@
 | 阶段 | 类 | 输入 → 输出 | 做什么 |
 |---|---|---|---|
 | MR1 | `CooccurrenceJob` | `UserBehavior.csv` → `<out>/edges` | 二次排序（`uid`+时间戳）把用户行为切成会话，同一会话内商品两两成边并累加权 |
-| MR2 | `GraphBuildJob` | `<out>/edges` → `<out>/graph_0` | 边表转邻接表：每个节点一行 `id \t PR初值 \t 邻居1:权重1 邻居2:权重2 ...`，同时数出节点数 **N** |
+| MR2 | `GraphBuildJob` | `<out>/edges` → `<out>/graph_0` | 边表转邻接表：每个节点一行 `id \t mass初值(1.0) \t 邻居1:权重1 邻居2:权重2 ...`，同时数出节点数 **N** |
 | MR3 | `PageRankJob` ×k | `<out>/graph_{k-1}` → `<out>/graph_k` | 一轮 PageRank（`mass` 形式：`sum(mass)=N`），用 Counter 算出 L1 变化量判停 |
 | MR4 | `TopKJob` | `<out>/graph_k` → `<out>/topk` | in-mapper combining 求全局 Top-K，输出 `rank, id, pagerank, strength` |
 
@@ -196,10 +196,10 @@ hdfs dfs -cat $OUT/topk/part-r-00000 | head -10
 | `iters` 一直打到 `maxIter` | `tol` 太严或图太大 | 放宽到 `1e-5`，或加大 `maxIter` |
 | `N` 明显偏小 | CSV 被截断 / 换行格式异常 | `wc -l` 核对行数；检查是否带了 `\r` |
 | `ClassNotFoundException: cs5488.pr.*` | 用了 `-libjars` 或 jar 名错 | 用 §4 的完整类名 `cs5488.pr.PageRankDriver` |
-| 迭代很慢 | 每轮都是一个 job，启动开销大 | 正常；80 轮 ≈ 80 个 job。想快就把 `maxIter` 设 20 先看趋势 |
+| 迭代很慢 | 每轮都是一个 job，启动开销大 | 正常；46 轮 ≈ 46 个 job。想快就把 `maxIter` 设 10 先看趋势 |
 | `final_L1` 是 `NaN` | damping 或 N 传错 | 用默认值，别手填 nodeCount |
 
-### 5.5 时间预期（参考，来自本机伪分布式/Python 缩放估算）
+### 5.5 时间预期（**估算，非实测**）
 
 | 阶段 | 330 采样（N=168k） | 全量（N 以 MR2 打印为准） |
 |---|---|---|
@@ -219,20 +219,25 @@ hdfs dfs -cat $OUT/topk/part-r-00000 | head -10
 每个 `*Job` 都有 `main`，可以单独提交：
 
 ```bash
+J=dist/taobao-pagerank-1.0.jar     # 或 target/taobao-pagerank-1.0.jar
+
 # MR1 单独跑
-hadoop jar target/taobao-pagerank-1.0.jar cs5488.pr.CooccurrenceJob \
+hadoop jar $J cs5488.pr.CooccurrenceJob \
     <inputCsv> <edgesOut> [sampleMod=330] [sessionGap=1800] [maxItems=50] [behaviors=pv,buy,cart,fav]
 
 # MR2
-hadoop jar target/taobao-pagerank-1.0.jar cs5488.pr.GraphBuildJob <edgesIn> <graph0Out>
+hadoop jar $J cs5488.pr.GraphBuildJob <edgesIn> <graph0Out>
 
-# MR3 单轮（nodeCount 必须传，否则归一化不对）
-hadoop jar target/taobao-pagerank-1.0.jar cs5488.pr.PageRankJob \
-    <graphIn> <graphOut> [nodeCount=168000] [damping=0.85]
+# MR3 单轮（nodeCount 一定要传真实值，代码默认是 1.0，传错不报错但数值全错）
+hadoop jar $J cs5488.pr.PageRankJob <graphIn> <graphOut> <nodeCount> [damping=0.85]
 
-# MR4
-hadoop jar target/taobao-pagerank-1.0.jar cs5488.pr.TopKJob <graphIn> <topkOut> [nodeCount] [topK]
+# MR4（nodeCount 同样是必填）
+hadoop jar $J cs5488.pr.TopKJob <graphIn> <topkOut> <nodeCount> [topK=30]
 ```
+
+> 注意：`PageRankJob` / `TopKJob` 的 `nodeCount` 在 CLI 上是**必填**参数
+> （`PageRankJob` 的代码默认值是 `1.0`，单跑时千万别漏）。`PageRankDriver` 会自动从
+> MR2 的 `NODE_COUNT` counter 拿到正确的 N 传下去，所以走 driver 就不用操心。
 
 **`PageRankJob` 的 `nodeCount` 很重要**：节点初始 `mass = 1`，`PR_i = mass_i / N`。传错 N
 不会报错但数值全错。
