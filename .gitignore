@@ -1,7 +1,13 @@
 # 大文件（通过网盘共享）
 *.db
-*.csv
 *.zip
+*.csv
+
+# ...但 pagerank 的小规模数据集与结果要入库（几十 KB ~ 1.7MB）
+!pagerank/data/sample/*.csv
+!pagerank/results/*.csv
+pagerank/results/local_run/
+pagerank/local/pr_output/
 
 # 项目文档（不上传到 Git）
 小组作业总结.md
@@ -15,6 +21,7 @@ Project_report_template.doc
 *.class
 target/
 *.log
+runtime-classpath.txt
 
 # Python
 __pycache__/

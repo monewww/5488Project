@@ -1,0 +1,12 @@
+# 保证在 Windows 上 checkout 的 shell / python / java 脚本仍是 LF 换行，
+# 否则在 Linux 集群上会出现 "bad interpreter: /usr/bin/env: No such file"
+*.sh    text eol=lf
+*.py    text eol=lf
+*.pig   text eol=lf
+*.java  text eol=lf
+
+# 二进制文件不做换行转换
+*.jar   binary
+*.png   binary
+*.jpg   binary
+*.gz    binary
