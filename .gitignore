@@ -47,3 +47,5 @@ desktop.ini
 .mvn/
 mvnw
 mvnw.cmd
+run_results/kmeans/feature.tsv
+run_results/kmeans/labels.tsv

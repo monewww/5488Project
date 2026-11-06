@@ -1,0 +1,77 @@
+========================================================================
+MapReduce 实际输出 vs 参考期望 — 比较报告
+========================================================================
+比较时间: 2026-11-06 18:41:08
+比较阶段: topk
+Expected: /home/iris/5488/results_tools/expected_topk_correct.tsv
+Actual:   /home/iris/5488/mr_out/topk/part-r-00000
+容差 tolerance: 1e-06
+Top-N 详情: 20
+
+解析规则: Top-K: 两文件按 'rank<TAB>id<TAB>pr[<TAB>strength]' 或 'id<TAB>pr[<TAB>strength]' 解析。比较 id 集合重合、重合率、排名变化与分数差。并列分数可能导致排名不同, 非错误。
+总体状态: MISSING_OR_EXTRA
+
+--- 统计指标 ---
+  exp_total: 30
+  act_total: 30
+  overlap: 0
+  overlap_ratio: 0.0
+  only_expected: 30
+  only_actual: 30
+  rank_changes: 0
+  score_diffs: 0
+  tolerance: 1e-06
+
+--- 前 20 条差异详情 ---
+  - 缺失在 actual 的 Top-K: 1164931
+  - 缺失在 actual 的 Top-K: 138964
+  - 缺失在 actual 的 Top-K: 1535294
+  - 缺失在 actual 的 Top-K: 1583704
+  - 缺失在 actual 的 Top-K: 1584550
+  - 缺失在 actual 的 Top-K: 1913065
+  - 缺失在 actual 的 Top-K: 2032668
+  - 缺失在 actual 的 Top-K: 2099112
+  - 缺失在 actual 的 Top-K: 2161188
+  - 缺失在 actual 的 Top-K: 2279428
+  - 缺失在 actual 的 Top-K: 2331370
+  - 缺失在 actual 的 Top-K: 2338453
+  - 缺失在 actual 的 Top-K: 2353009
+  - 缺失在 actual 的 Top-K: 2453685
+  - 缺失在 actual 的 Top-K: 250498
+  - 缺失在 actual 的 Top-K: 3031354
+  - 缺失在 actual 的 Top-K: 3274614
+  - 缺失在 actual 的 Top-K: 3520504
+  - 缺失在 actual 的 Top-K: 3563468
+  - 缺失在 actual 的 Top-K: 363858
+  - actual 多出的 Top-K: 1400823
+  - actual 多出的 Top-K: 1452325
+  - actual 多出的 Top-K: 1699501
+  - actual 多出的 Top-K: 1973530
+  - actual 多出的 Top-K: 2546408
+  - actual 多出的 Top-K: 2606056
+  - actual 多出的 Top-K: 2681048
+  - actual 多出的 Top-K: 2793759
+  - actual 多出的 Top-K: 2831982
+  - actual 多出的 Top-K: 2968856
+  - actual 多出的 Top-K: 3022226
+  - actual 多出的 Top-K: 3203261
+  - actual 多出的 Top-K: 3311209
+  - actual 多出的 Top-K: 3386190
+  - actual 多出的 Top-K: 3676255
+  - actual 多出的 Top-K: 3686583
+  - actual 多出的 Top-K: 3718611
+  - actual 多出的 Top-K: 3877127
+  - actual 多出的 Top-K: 4119689
+  - actual 多出的 Top-K: 4264271
+
+--- 可能差异原因 ---
+  - 输入数据不同 (是否同一份原始 CSV / 采样参数 sampleMod 不同)
+  - 相同 timestamp 的排序不确定性 (Java (uid,ts) 无 tie-breaker)
+  - 行为白名单 / session gap / 商品上限参数不一致
+  - 浮点求和顺序不同 (PageRank 末位差异属正常)
+  - Top-K 并列分数导致排名不同 (非错误)
+
+--- 未验证内容与限制 ---
+  - 本报告仅基于提供的本地文件做静态比对, 不验证 Hadoop 是否真正跑通
+  - MR1 若在外部被全局聚合, 则不能当作用户级输出比较 (本工具按多重集处理)
+========================================================================

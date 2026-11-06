@@ -1,0 +1,36 @@
+========================================================================
+MapReduce 实际输出 vs 参考期望 — 比较报告
+========================================================================
+比较时间: 2026-11-06 18:40:15
+比较阶段: mr2
+Expected: /home/iris/5488/results_tools/expected330/expected_edges_global.tsv
+Actual:   /home/iris/5488/mr_out/graph_46/part-r-00000
+容差 tolerance: 1e-06
+Top-N 详情: 20
+
+解析规则: MR2 全局边: expected_edges_global.tsv 按 'i1<TAB>i2<TAB>w' 解析; actual (GraphBuildJob) 按 'id<TAB>mass<TAB>adj' 解析并从邻接表还原无向全局边 (取 (min,max)->w), 再与 expected 比较。
+总体状态: EXACT_MATCH
+
+--- 统计指标 ---
+  exp_total: 1763568
+  act_total: 1763568
+  matched: 1763568
+  missing: 0
+  extra: 0
+  weight_mismatch: 0
+  adj_inconsistent: 0
+
+--- 前 20 条差异详情 ---
+  无差异
+
+--- 可能差异原因 ---
+  - 输入数据不同 (是否同一份原始 CSV / 采样参数 sampleMod 不同)
+  - 相同 timestamp 的排序不确定性 (Java (uid,ts) 无 tie-breaker)
+  - 行为白名单 / session gap / 商品上限参数不一致
+  - 浮点求和顺序不同 (PageRank 末位差异属正常)
+  - Top-K 并列分数导致排名不同 (非错误)
+
+--- 未验证内容与限制 ---
+  - 本报告仅基于提供的本地文件做静态比对, 不验证 Hadoop 是否真正跑通
+  - MR1 若在外部被全局聚合, 则不能当作用户级输出比较 (本工具按多重集处理)
+========================================================================
