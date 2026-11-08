@@ -21,8 +21,7 @@ TIMESTAMP_MIN = 1511539200  # 2017-11-25 00:00:00 UTC+8
 TIMESTAMP_MAX = 1512316800  # 2017-12-04 00:00:00 UTC+8
 WHERE_CLAUSE = f"WHERE timestamp >= {TIMESTAMP_MIN} AND timestamp < {TIMESTAMP_MAX}"
 
-# 设置中文字体
-matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
+# Use default font (all text is in English)
 matplotlib.rcParams['axes.unicode_minus'] = False
 
 def get_connection():
@@ -52,14 +51,14 @@ def plot_behavior_distribution():
     ''', conn)
     conn.close()
     
-    # 行为类型中文映射
-    type_map = {'pv': '点击(PV)', 'buy': '购买(Buy)', 'cart': '加购(Cart)', 'fav': '收藏(Fav)'}
+    # Behavior type labels (English)
+    type_map = {'pv': 'Page View', 'buy': 'Purchase', 'cart': 'Add to Cart', 'fav': 'Favorite'}
     df['behavior_cn'] = df['behavior_type'].map(type_map)
     
     # 颜色
     colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 7))
     
     # 柱状图
     bars = ax1.bar(df['behavior_cn'], df['count'], color=colors, edgecolor='white', linewidth=1.5)
@@ -74,14 +73,26 @@ def plot_behavior_distribution():
         ax1.text(bar.get_x() + bar.get_width()/2., height,
                 f'{count/1e6:.1f}M', ha='center', va='bottom', fontsize=10, fontweight='bold')
     
-    # 饼图
+    # 饼图 - 小切片分离 + 百分比标签推到外侧，避免重叠
+    explode = [0, 0.08, 0.15, 0.22]  # 小切片依次向外分离
+
     wedges, texts, autotexts = ax2.pie(
-        df['count'], labels=df['behavior_cn'], autopct='%1.1f%%',
-        colors=colors, startangle=90, textprops={'fontsize': 11}
+        df['count'], autopct='%1.1f%%', pctdistance=1.15,
+        explode=explode,
+        colors=colors, startangle=90,
+        textprops={'fontsize': 10, 'fontweight': 'bold'}
     )
+    # 手动调整小切片百分比标签位置，避免重叠且不超过标题
+    for i, autotext in enumerate(autotexts):
+        x, y = autotext.get_position()
+        if i == 2:    # Favorite (2.9%)
+            autotext.set_position((x - 0.25, y - 0.02))
+        elif i == 3:  # Purchase (2.0%)
+            autotext.set_position((x + 0.20, y - 0.15))
+    ax2.legend(wedges, df['behavior_cn'], loc='center left', bbox_to_anchor=(1, 0.5), fontsize=11)
     ax2.set_title('User Behavior Type Distribution (Pie Chart)', fontsize=14, fontweight='bold')
     
-    plt.tight_layout()
+    plt.subplots_adjust(top=0.68)
     filepath = os.path.join(OUTPUT_DIR, '01_behavior_distribution.png')
     plt.savefig(filepath, dpi=150, bbox_inches='tight')
     plt.close()
@@ -463,11 +474,11 @@ def plot_dashboard():
     
     conn.close()
     
-    fig = plt.figure(figsize=(16, 10))
-    fig.suptitle('Taobao User Behavior Dataset - Overview Dashboard', fontsize=16, fontweight='bold', y=0.98)
+    fig = plt.figure(figsize=(16, 8))
+    fig.suptitle('Taobao User Behavior Dataset - Overview Dashboard', fontsize=16, fontweight='bold', y=0.97)
     
     # 顶部: 关键指标卡片
-    ax0 = fig.add_axes([0.05, 0.82, 0.9, 0.12])
+    ax0 = fig.add_axes([0.05, 0.78, 0.9, 0.14])
     ax0.axis('off')
     
     metrics = [
@@ -488,8 +499,8 @@ def plot_dashboard():
         ax0.text(x, 0.25, label, transform=ax0.transAxes,
                 ha='center', va='center', fontsize=9, color='#666')
     
-    # 底部: 行为统计表格
-    ax1 = fig.add_axes([0.1, 0.1, 0.8, 0.6])
+    # 底部: 行为统计表格（紧贴卡片下方）
+    ax1 = fig.add_axes([0.1, 0.52, 0.8, 0.20])
     ax1.axis('off')
     
     type_map = {'pv': 'Click (Page View)', 'buy': 'Purchase', 'cart': 'Add to Cart', 'fav': 'Favorite'}
